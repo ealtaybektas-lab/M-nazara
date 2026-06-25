@@ -6,6 +6,8 @@
     <title>Münazara</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+    <!-- Ekran görüntüsü alma kütüphanesi -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         html, body {
             background-color: #e3dccb !important;
@@ -16,13 +18,11 @@
             padding: 0;
             height: 100%;
         }
-        
         .gazete-kutu { 
             border: 2px solid #2c2c2c !important; 
             background: #fdfaf2 !important; 
             box-shadow: 4px 4px 0px rgba(0,0,0,0.2) !important; 
         }
-        
         .gazete-buton-ana {
             background-color: #4a3728 !important;
             color: #ffffff !important;
@@ -30,10 +30,7 @@
             font-family: 'Times New Roman', Times, serif !important;
             transition: all 0.2s ease;
         }
-        .gazete-buton-ana:hover {
-            background-color: #000000 !important;
-        }
-        
+        .gazete-buton-ana:hover { background-color: #000000 !important; }
         .gazete-buton-ikincil {
             background-color: transparent !important;
             color: #4a3728 !important;
@@ -41,43 +38,38 @@
             font-family: 'Times New Roman', Times, serif !important;
             transition: all 0.2s ease;
         }
-        .gazete-buton-ikincil:hover {
-            background-color: #4a3728 !important;
-            color: #ffffff !important;
-        }
-
+        .gazete-buton-ikincil:hover { background-color: #4a3728 !important; color: #ffffff !important; }
         .video-box { 
             background: #dcd0b5 !important; 
             border: 2px solid #2c2c2c !important; 
-            border-radius: 0px !important; 
             overflow: hidden; 
             position: relative; 
             aspect-ratio: 4/3; 
         }
-        .active-speaker { 
-            border: 5px solid #8b0000 !important; 
-        }
-        .break-time { 
-            border: 4px solid #555555 !important; 
-        }
+        .active-speaker { border: 5px solid #8b0000 !important; }
+        .break-time { border: 4px solid #555555 !important; }
+        .star { cursor: pointer; font-size: 2.5rem; color: #ccc; }
+        .star.selected { color: #4a3728; }
 
-        .star {
-            cursor: pointer;
-            font-size: 2.5rem;
-            color: #ccc;
-            transition: color 0.1s ease;
+        /* Podyum Sıralı Animasyon Efektleri */
+        .podium-card {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275), transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
-        .star.selected {
-            color: #4a3728;
+        .podium-card.reveal {
+            opacity: 1;
+            transform: translateY(0);
         }
     </style>
 </head>
 <body class="p-4 max-w-md mx-auto flex flex-col justify-between">
 
-    <div id="menu-screen" class="flex-1 flex flex-col justify-center gap-6">
+    <!-- MENÜ EKRANI -->
+    <div id="menu-screen" class="flex-1 flex flex-col justify-center gap-4">
         <div class="text-center">
             <h1 class="text-4xl font-black italic tracking-tight border-b-4 border-black pb-2 uppercase text-[#2c2c2c]">MUNAZARA CEPTE</h1>
-            <p class="text-xs uppercase tracking-widest mt-2 font-bold text-[#2c2c2c]">P2P Canli Munazara Platformu - Klasik Baski</p>
+            <p class="text-xs uppercase tracking-widest mt-2 font-bold text-[#2c2c2c]">P2P Canli Munazara Platformu</p>
         </div>
 
         <div class="gazete-kutu p-6 flex flex-col gap-4">
@@ -93,44 +85,56 @@
 
             <div class="flex flex-col gap-3">
                 <input id="room-code-input" type="text" placeholder="Oda Kodunu Girin" class="w-full bg-transparent border-b-2 border-black py-2 text-center font-bold text-xl tracking-widest placeholder:text-black/40 text-[#2c2c2c] focus:outline-none">
-                <button onclick="joinRoom()" class="w-full gazete-buton-ikincil font-bold py-3 px-4 uppercase tracking-wider text-sm">
-                    Odaya Katil
+                <button onclick="joinRoom(false)" class="w-full gazete-buton-ikincil font-bold py-3 px-4 uppercase tracking-wider text-sm">
+                    Münazaracı Olarak Katıl
+                </button>
+                <button onclick="joinRoom(true)" class="w-full border border-dashed border-black py-2 text-xs uppercase font-bold text-black/70 hover:bg-black/5">
+                    İzleyici Olarak Katıl
                 </button>
             </div>
         </div>
     </div>
 
+    <!-- ODA BEKLEME EKRANI -->
     <div id="room-screen" class="hidden flex-1 flex flex-col justify-between">
         <div class="gazete-kutu p-4 text-center">
             <p class="text-xs uppercase tracking-wider font-bold">Oda Kodu</p>
             <h2 id="display-room-code" class="text-3xl font-bold mt-1 tracking-widest underline">------</h2>
             <p id="player-count" class="text-sm font-bold italic mt-2">Oyuncular bekleniyor (1/4)...</p>
+            <p id="viewer-count" class="text-xs font-bold text-gray-600 mt-1">İzleyici sayısı: 0</p>
         </div>
 
         <div class="my-4 gazete-kutu p-4 flex-1 flex flex-col gap-2 justify-center">
-            <div id="role-ha" class="p-3 border-b border-black/20 flex justify-between items-center"><span class="font-bold">Hukumet Acilis (Host)</span><span class="text-sm italic" id="user-ha">Bekleniyor...</span></div>
-            <div id="role-ma" class="p-3 border-b border-black/20 flex justify-between items-center"><span class="font-bold">Muhalefet Acilis</span><span class="text-sm italic" id="user-ma">Bekleniyor...</span></div>
-            <div id="role-hk" class="p-3 border-b border-black/20 flex justify-between items-center"><span class="font-bold">Hukumet Kapanis</span><span class="text-sm italic" id="user-hk">Bekleniyor...</span></div>
-            <div id="role-mk" class="p-3 flex justify-between items-center"><span class="font-bold">Muhalefet Kapanis</span><span class="text-sm italic" id="user-mk">Bekleniyor...</span></div>
+            <div id="role-slot-0" class="p-3 border-b border-black/20 flex justify-between items-center"><span class="font-bold">1. Katılımcı (Host)</span><span class="text-sm italic" id="user-slot-0">Bekleniyor...</span></div>
+            <div id="role-slot-1" class="p-3 border-b border-black/20 flex justify-between items-center"><span class="font-bold">2. Katılımcı</span><span class="text-sm italic" id="user-slot-1">Bekleniyor...</span></div>
+            <div id="role-slot-2" class="p-3 border-b border-black/20 flex justify-between items-center"><span class="font-bold">3. Katılımcı</span><span class="text-sm italic" id="user-slot-2">Bekleniyor...</span></div>
+            <div id="role-slot-3" class="p-3 flex justify-between items-center"><span class="font-bold">4. Katılımcı</span><span class="text-sm italic" id="user-slot-3">Bekleniyor...</span></div>
         </div>
 
         <button id="start-game-btn" disabled class="w-full bg-transparent border-2 border-gray-400 text-gray-400 font-bold py-3 px-4 uppercase cursor-not-allowed">
-            4 Kisi Olunca Baslar
+            4 Munazaraci Olunca Baslar
         </button>
     </div>
 
+    <!-- OYUN ARENASI -->
     <div id="game-screen" class="hidden flex-1 flex flex-col justify-between gap-2">
-        <div class="gazete-kutu p-3 text-center">
+        <div class="gazete-kutu p-3 text-center relative">
             <div id="game-status" class="text-base font-bold uppercase tracking-widest mb-1">Dusunme Suresi</div>
             <div id="game-timer" class="text-5xl font-black tracking-tight">08:00</div>
-            <div id="motion-text" class="text-sm font-bold italic mt-2 border-t border-black/30 pt-2 px-1">
-                Hukumet savunur ki: ...
+            <div id="motion-text" class="text-sm font-bold italic mt-2 border-t border-black/30 pt-2 px-1">Hukumet savunur ki: ...</div>
+            
+            <div id="poi-panel" class="hidden absolute inset-0 bg-black/90 text-white flex flex-col justify-center items-center p-2 z-30">
+                <p id="poi-msg" class="font-bold uppercase tracking-wider text-sm mb-2">Biri Soru İstiyor</p>
+                <div id="poi-actions" class="flex gap-4">
+                    <button onclick="respondToPoi(true)" class="bg-green-700 px-4 py-1 font-bold text-xs uppercase">Soru Al</button>
+                    <button onclick="respondToPoi(false)" class="bg-red-700 px-4 py-1 font-bold text-xs uppercase">Reddet</button>
+                </div>
             </div>
         </div>
 
         <div class="grid grid-cols-2 gap-2 flex-1 items-center">
             <div id="vbox-ha" class="video-box flex flex-col justify-end">
-                <video id="video-ha" autoplay playsinline muted class="w-full h-full object-cover absolute inset-0"></video>
+                <video id="video-ha" autoplay playsinline class="w-full h-full object-cover absolute inset-0"></video>
                 <div class="bg-black text-white text-center text-xs py-1 z-10 w-full font-bold uppercase tracking-wider">Hukumet Acilis</div>
             </div>
             <div id="vbox-ma" class="video-box flex flex-col justify-end">
@@ -148,10 +152,20 @@
         </div>
 
         <div class="flex flex-col gap-2">
-            <div id="system-prompt" class="border-2 border-black bg-[#fdfaf2] p-3 text-center text-xs font-bold uppercase tracking-wide">
-                Kameralar acik, mikrofonlar hazirlik icin hazırlandı.
+            <div id="system-prompt" class="border-2 border-black bg-[#fdfaf2] p-2 text-center text-xs font-bold uppercase tracking-wide">
+                Bağlantılar kuruluyor.
             </div>
-            <button id="end-speech-btn" onclick="userFinishedSpeech()" class="hidden w-full bg-[#8b0000] text-white font-bold py-4 uppercase tracking-wider shadow-md">
+            
+            <div class="flex gap-2">
+                <button id="loopback-btn" onclick="toggleLoopback()" class="flex-1 border-2 border-black bg-gray-300 font-bold py-2 text-xs uppercase tracking-wide">
+                    Kendi Sesimi Duy: Kapali
+                </button>
+                <button id="poi-btn" disabled onclick="requestPoi()" class="flex-1 border-2 border-gray-400 text-gray-400 font-bold py-2 text-xs uppercase tracking-wide cursor-not-allowed">
+                    Soru Sor
+                </button>
+            </div>
+
+            <button id="end-speech-btn" onclick="userFinishedSpeech()" class="hidden w-full bg-[#8b0000] text-white font-bold py-3 uppercase tracking-wider shadow-md text-sm">
                 KONUSMAMI BITIR
             </button>
             <button id="host-skip-btn" onclick="hostRequestSkip()" class="hidden w-full border-2 border-black bg-transparent hover:bg-black hover:text-white text-black font-bold py-2 text-xs uppercase tracking-wide transition-all">
@@ -160,40 +174,63 @@
         </div>
     </div>
 
+    <!-- PUANLAMA SEKMESI -->
     <div id="rating-screen" class="hidden flex-1 flex flex-col justify-center gap-4">
-        <div class="text-center">
-            <h2 class="text-3xl font-bold uppercase italic border-b-2 border-black pb-1">Munazara Tamamlandi</h2>
-            <p class="text-sm font-bold mt-1">Lutfen diger konusmacilari performanslarina gore puanlayin.</p>
-        </div>
-
+        <div class="text-center"><h2 class="text-3xl font-bold uppercase italic border-b-2 border-black pb-1">Munazara Tamamlandi</h2></div>
         <div id="rating-inputs" class="gazete-kutu p-4 flex flex-col gap-4"></div>
-
-        <div id="waiting-status" class="hidden text-center text-sm font-bold italic text-red-800 animate-pulse">
-            Diger oyuncularin puanlamayi bitirmesi bekleniyor...
-        </div>
-
-        <button id="submit-ratings-btn" onclick="submitRatings()" class="w-full bg-black text-white font-bold py-3 uppercase tracking-wider">
-            Puanlari Gonder
-        </button>
+        <div id="waiting-status" class="hidden text-center text-sm font-bold italic text-red-800 animate-pulse">Diger oyuncularin puanlamayi bitirmesi bekleniyor...</div>
+        <button id="submit-ratings-btn" onclick="submitRatings()" class="w-full bg-black text-white font-bold py-3 uppercase tracking-wider">Puanlari Gonder</button>
     </div>
 
-    <div id="result-screen" class="hidden flex-1 flex flex-col justify-center gap-6">
-        <div class="text-center border-b-4 border-black pb-2">
-            <h1 class="text-4xl font-black italic uppercase">MUNAZARA SONUCLARI</h1>
-            <p class="text-xs uppercase font-bold tracking-widest mt-1">Podyum Dereceleri</p>
+    <!-- SONUC / PODIUM EKRANI -->
+    <div id="result-screen" class="hidden flex-1 flex flex-col justify-between gap-4 overflow-y-auto">
+        <div id="share-capture-area" class="p-3 bg-[#e3dccb] flex flex-col gap-3">
+            <div class="text-center border-b-4 border-black pb-2">
+                <h1 class="text-3xl font-black italic uppercase">MUNAZARA SONUCLARI</h1>
+                <p id="podium-motion-sub" class="text-[11px] uppercase font-bold text-black/70 mt-1 max-w-xs mx-auto text-center leading-tight"></p>
+            </div>
+            
+            <div id="podium-container" class="flex flex-col gap-3 my-2"></div>
         </div>
 
-        <div id="podium-container" class="flex flex-col gap-4 my-4">
-            </div>
-
-        <button onclick="location.reload()" class="w-full gazete-buton-ana font-bold py-3 uppercase tracking-wider text-sm">
-            Yeni Mac Baslat
-        </button>
+        <div class="flex flex-col gap-2">
+            <button id="share-podium-btn" onclick="sharePodiumImage()" class="w-full bg-[#25d366] hover:bg-[#128c7e] text-white border-2 border-black font-black py-3 uppercase tracking-wider text-xs shadow-md transition-all">
+                Podyumu Fotograf Olarak Paylas Veya Kaydet
+            </button>
+            <button onclick="location.reload()" class="w-full gazete-buton-ana font-bold py-3 uppercase tracking-wider text-xs">
+                Yeni Mac Baslat
+            </button>
+        </div>
     </div>
 
     <script>
-        const neseHavuzu = ["yapay zeka sistemleri", "basılı kitaplar", "sosyal medya platformları", "nükleer enerji santralleri", "kripto para birimleri", "uzay araştırmaları yatırımları", "özel okullar", "zorunlu din dersleri", "genetik mühendisliği çalışmaları", "akıllı telefon kullanımı", "büyükşehir göçleri", "alternatif tıp yöntemleri", "hayvanat bahçeleri", "profesyonel spor kontratları", "ödev sistemi", "kamu kameraları", "otonom araçlar", "yapay et üretimi", "e-spor turnuvaları", "estetik cerrahi müdahlenin", "çevrim içi eğitimler", "uluslararası askeri ittifaklar", "büyük teknoloji şirketleri", "fosil yakıt kullanımı", "sanat eserlerinde sansür", "metaverse mülkleri", "haftalık çalışma saatleri", "plastik poşet ve ambalajlar", "şehir içi araç girişleri", "yapay zeka sanatçıları", "gençlik festivalleri", "uluslararası ticaret anlaşmaları", "üniversite harçları", "reklam algoritmaları", "bireysel silahlanma", "genetiği değiştirilmiş gıdalar", "uzaktan çalışma modelleri", "tarihi eserlerin iadesi", "uzay turizmi faaliyetleri", "dijital oyun süreleri"];
-        const fiilHavuzu = ["yasaklanmalıdır", "sınırlandırılmalıdır", "teşvik edilmelidir", "kamulaştırılmalıdır", "vergilendirilmelidir", "ücretsiz hale getirilmelidir", "zorunlu kılınmalıdır", "kademeli olarak kaldırılmalıdır", "uluslararası denetime tabi tutulmalıdır", "desteklenmelidir", "suç kapsamına alınmalıdır", "özelleştirilmelidir", "yasal güvence altına alınmalıdır", "şeffaflaştırılmalıdır", "yerelleştirilmelidir", "ödüllendirilmelidir", "engellenmelidir", "bölgesel olarak askıya alınmalıdır", "müfredattan çıkarılmalıdır", "fonlanmalıdır"];
+        // Nesne Havuzu (Tam 40 Tane)
+        const neseHavuzu = [
+            "yapay zeka sistemleri", "basılı kitaplar", "sosyal medya platformları", "nükleer enerji santralleri", 
+            "kripto para birimleri", "uzay araştırmaları yatırımları", "özel okullar", "zorunlu din dersleri", 
+            "genetik mühendisliği çalışmaları", "akıllı telefon kullanımı", "büyükşehir göçleri", "alternatif tıp yöntemleri", 
+            "hayvanat bahçeleri", "profesyonel spor kontratları", "ödev sistemi", "kamu kameraları", 
+            "otonom araçlar", "yapay et üretimi", "e-spor turnuvaları", "estetik cerrahi müdahaleler",
+            "haftada 4 gun calisma modeli", "plastik poset ve ambalajlar", "uzaktan egitim sistemleri", "metaverse ve sanal evrenler",
+            "organ bagisi surecleri", "devlet destekli sanat faaliyetleri", "kumar ve sans oyunlari", "savunma sanayisi yatirimlari",
+            "bireysel silahlanma haklari", "fosil yakitli araclar", "genetigi degistirilmis gidalar", "kamusal alanlarda yuz tanima",
+            "universiteye giris sinavlari", "abonelik tabanli dijital platformlar", "giyilebilir saglik teknolojileri", "sehirler arasi hizli trenler",
+            "hayvanlar uzerinde yapilan deneyler", "influencer pazarlama yontemleri", "nakitsiz toplum ve dijital paralar", "yenilenebilir enerji tesvikleri"
+        ];
+
+        // Fiil Havuzu (Tam 40 Tane)
+        const fiilHavuzu = [
+            "yasaklanmalidir", "sinirlandirilmalidir", "tesvik edilmelidir", "kamulastirilmalidir", 
+            "vergilendirilmelidir", "ucretsiz hale getirilmelidir", "zorunlu kilinmalidir", "tamamen serbest birakilmalidir",
+            "devlet eliyle denetlenmelidir", "uluslararasi hukuka baglanmalidir", "okul mufredatlarina eklenmelidir", "kamu yararina kapatilmalidir",
+            "yerel yonetimlere devredilmelidir", "siki cezalara tabi tutulmalidir", "bireysel tercihlere birakilmalidir", "sadece yetiskinlere sunulmalidir",
+            "ekonomik yaptirimlarla durdurulmalidir", "fon yardimlariyla buyutulmelidir", "etik kurullar tarafindan incelenmelidir", "toplumsal bir tehdit olarak gorulmelidir",
+            "gelecegin temel tasi ilan edilmelidir", "kademeli olarak azaltilmalidir", "kamu spotlari ile yerilmelidir", "zorunlu lisanslara tabi tutulmalidir",
+            "vergi muafiyetinden yararlandirilmalidir", "gelismekte olan ulkelere hibe edilmelidir", "teknolojik altyapiyla entegre edilmelidir", "geleneksel yontemlerle korunmalidir",
+            "sivil toplum kuruluslarina birakilmalidir", "kati denetimlerden gecirilmelidir", "zorunlu sigorta kapsamina alinmalidir", "referanduma sunularak oylanmalidir",
+            "cevre vergisine tabi tutulmalidir", "kuresel olarak standartlastirilmalidir", "akademik calismalardan men edilmelidir", "populer kulturden arindirilmalidir",
+            "uretim asamasinda durdurulmalidir", "her vatandasa esit dagitilmalidir", "dijital arsivlerde saklanmalidir", "reklam faaliyetlerinden men edilmelidir"
+        ];
 
         function rastgeleKonuSec() {
             const a = neseHavuzu[Math.floor(Math.random() * neseHavuzu.length)];
@@ -203,13 +240,19 @@
 
         let myPeer, myId, roomCode;
         let roomPlayers = []; 
-        let myRole = ""; 
+        let myRole = "viewer"; 
+        let isViewer = false;
         let localStream;
         let selectedMotion = "";
         let currentSpeakerIndex = -1; 
         let hostConnectionReferences = []; 
         let clientToHostConn = null;
         let inBreakPeriod = false;
+        let loopbackActive = false;
+
+        let poiActive = false;
+        let poiRequesterId = null;
+        let savedMainTimerSeconds = 0;
 
         let finalScores = {}; 
         let submittedRatingsCount = 0;
@@ -225,35 +268,41 @@
         }
 
         async function getMedia() {
-            if (localStream) return;
+            if (isViewer || localStream) return;
             try {
-                // SES KALITESINI ARTIRAN VE KILITLENMEYI ONLEYEN FILTRELER: Echo cancellation ve noise suppression aktif
                 localStream = await navigator.mediaDevices.getUserMedia({ 
                     video: { width: { ideal: 300 }, height: { ideal: 300 }, facingMode: "user" }, 
-                    audio: {
-                        echoCancellation: true,
-                        noiseSuppression: true,
-                        autoGainControl: true
-                    }
+                    audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }
                 });
-                
-                // Ağ kopmalarını önlemek için tarayıcının ses track'lerini kapatmıyoruz. 
-                // Donanımsal akışı sürekli canlı tutuyoruz.
                 localStream.getAudioTracks().forEach(track => { track.enabled = true; });
             } catch (err) {
-                console.error("Medya hatası:", err);
-                alert("Kamera veya mikrofon izni verilmedi. Lütfen tarayıcı ayarlarından izin verin.");
+                console.error(err);
+                alert("Kamera/Mikrofon izni sarttir.");
+            }
+        }
+
+        function toggleLoopback() {
+            loopbackActive = !loopbackActive;
+            const myVideo = document.getElementById(`video-${myRole}`);
+            if (myVideo) { myVideo.muted = !loopbackActive; }
+            const btn = document.getElementById('loopback-btn');
+            if(loopbackActive) {
+                btn.innerText = "Kendi Sesimi Duy: Acik";
+                btn.className = "flex-1 border-2 border-black bg-green-600 text-white font-bold py-2 text-xs uppercase tracking-wide";
+            } else {
+                btn.innerText = "Kendi Sesimi Duy: Kapali";
+                btn.className = "flex-1 border-2 border-black bg-gray-300 text-black font-bold py-2 text-xs uppercase tracking-wide";
             }
         }
 
         async function createRoom() {
+            isViewer = false;
             await getMedia();
             roomCode = Math.random().toString(36).substring(2, 8).toUpperCase();
             document.getElementById('display-room-code').innerText = roomCode;
             
             myPeer = new Peer(roomCode + "-HOST");
             myId = roomCode + "-HOST";
-            myRole = "ha"; 
 
             myPeer.on('open', () => {
                 setupHostLogic();
@@ -262,13 +311,14 @@
             });
         }
 
-        async function joinRoom() {
+        async function joinRoom(asViewerChoice) {
+            isViewer = asViewerChoice;
             const input = document.getElementById('room-code-input').value.trim().toUpperCase();
-            if(!input) return alert("Gecerli bir kod girin.");
-            await getMedia();
+            if(!input) return alert("Kod girin.");
+            if(!isViewer) await getMedia();
 
             roomCode = input;
-            myId = roomCode + "-" + Math.random().toString(36).substring(2, 6).toUpperCase();
+            myId = roomCode + "-" + (isViewer ? "VIEW-" : "PL-") + Math.random().toString(36).substring(2, 6).toUpperCase();
             myPeer = new Peer(myId);
 
             myPeer.on('open', () => {
@@ -278,30 +328,31 @@
         }
 
         function setupHostLogic() {
-            roomPlayers = [{ id: myId, role: "ha" }];
+            roomPlayers = [{ id: myId, isViewer: false, role: "" }];
             selectedMotion = rastgeleKonuSec();
 
             myPeer.on('connection', (conn) => {
-                if(roomPlayers.length >= 4) return;
-                let assignedRole = roller[roomPlayers.length];
-                roomPlayers.push({ id: conn.peer, role: assignedRole });
+                let incomingIsViewer = conn.peer.includes("-VIEW-");
+                let totalSpeakers = roomPlayers.filter(p => !p.isViewer).length;
+                let totalViewers = roomPlayers.filter(p => p.isViewer).length;
+
+                if(!incomingIsViewer && totalSpeakers >= 4) return conn.close();
+                if(incomingIsViewer && totalViewers >= 5) return conn.close();
+
+                roomPlayers.push({ id: conn.peer, isViewer: incomingIsViewer, role: "" });
                 hostConnectionReferences.push(conn);
 
                 conn.on('open', () => {
-                    broadcast({
-                        type: 'ROOM_UPDATE',
-                        players: roomPlayers,
-                        motion: selectedMotion
-                    });
+                    sendRoomUpdate();
                     updateRoomUI();
                 });
 
                 conn.on('data', (data) => {
-                    if (data.type === 'REQUEST_NEXT_STEP') {
-                        executeNextStepLogic();
-                    } else if (data.type === 'SUBMIT_SCORES') {
-                        handleIncomingScores(data.scores);
-                    }
+                    if (data.type === 'REQUEST_NEXT_STEP') executeNextStepLogic();
+                    if (data.type === 'SUBMIT_SCORES') handleIncomingScores(data.scores);
+                    if (data.type === 'SIGNAL_POI_REQUEST') handlePoiRequest(conn.peer);
+                    if (data.type === 'SIGNAL_POI_RESPONSE') handlePoiResponse(data.accepted);
+                    if (data.type === 'SIGNAL_POI_FINISHED') finishPoiPeriod();
                 });
             });
 
@@ -314,7 +365,7 @@
         function setupClientLogic(conn) {
             clientToHostConn = conn;
             myPeer.on('call', (call) => {
-                call.answer(localStream);
+                call.answer(isViewer ? null : localStream);
                 call.on('stream', (remoteStream) => handleRemoteStream(call.peer, remoteStream));
             });
 
@@ -323,12 +374,14 @@
                     roomPlayers = data.players;
                     selectedMotion = data.motion;
                     let me = roomPlayers.find(p => p.id === myId);
-                    if(me) myRole = me.role;
+                    if(me) { myRole = me.role; isViewer = me.isViewer; }
                     showScreen('room-screen');
                     document.getElementById('display-room-code').innerText = roomCode;
                     updateRoomUI();
                 } else if (data.type === 'START_GAME') {
                     roomPlayers = data.players;
+                    let me = roomPlayers.find(p => p.id === myId);
+                    if(me) myRole = me.role;
                     startDebateMatch();
                 } else if (data.type === 'NEXT_STEP') {
                     handleTransitionPhase();
@@ -340,59 +393,79 @@
                     goToRatingScreen();
                 } else if (data.type === 'FINAL_RESULTS') {
                     renderPodium(data.scores);
+                } else if (data.type === 'BROADCAST_POI_SHOW_PANEL') {
+                    showPoiPanelClient(data.msg, data.isSpeaker);
+                } else if (data.type === 'BROADCAST_POI_HIDE_PANEL') {
+                    document.getElementById('poi-panel').classList.add('hidden');
+                } else if (data.type === 'BROADCAST_POI_START_SPEECH') {
+                    startPoiTimerClient(data.activeSpeakerRole);
+                } else if (data.type === 'BROADCAST_POI_END') {
+                    endPoiTimerClient();
                 }
             });
         }
 
+        function sendRoomUpdate() {
+            broadcast({ type: 'ROOM_UPDATE', players: roomPlayers, motion: selectedMotion });
+        }
+
         function broadcast(msg) {
-            if (myRole === "ha") {
-                hostConnectionReferences.forEach(conn => {
-                    if (conn.open) conn.send(msg);
-                });
+            if (myId === roomCode + "-HOST") {
+                hostConnectionReferences.forEach(conn => { if (conn.open) conn.send(msg); });
             } else {
-                if (clientToHostConn && clientToHostConn.open) {
-                    clientToHostConn.send(msg);
-                }
+                if (clientToHostConn && clientToHostConn.open) clientToHostConn.send(msg);
             }
         }
 
         function updateRoomUI() {
-            document.getElementById('player-count').innerText = `Oyuncular bekleniyor (${roomPlayers.length}/4)...`;
-            roller.forEach(r => document.getElementById(`user-${r}`).innerText = "Bekleniyor...");
+            let speakers = roomPlayers.filter(p => !p.isViewer);
+            let viewers = roomPlayers.filter(p => p.isViewer);
 
-            roomPlayers.forEach(p => {
-                document.getElementById(`user-${p.role}`).innerText = p.id === myId ? "Siz" : "Baglandi";
-            });
+            document.getElementById('player-count').innerText = `Munazaracilar (${speakers.length}/4)`;
+            document.getElementById('viewer-count').innerText = `Izleyici sayisi: ${viewers.length}/5`;
 
-            if(roomPlayers.length === 4 && myRole === "ha") {
+            for(let i=0; i<4; i++) {
+                let el = document.getElementById(`user-slot-${i}`);
+                if(speakers[i]) {
+                    el.innerText = speakers[i].id === myId ? "Siz" : "Baglandi";
+                } else { el.innerText = "Bekleniyor..."; }
+            }
+
+            if(speakers.length === 4 && myId === roomCode + "-HOST") {
                 const btn = document.getElementById('start-game-btn');
                 btn.disabled = false;
-                btn.className = "w-full gazete-buton-ana font-bold py-3 px-4 uppercase tracking-wider transition-all text-sm";
-                btn.innerText = "Munazarayi Baslat";
-                btn.onclick = hostStartsGame;
+                btn.className = "w-full gazete-buton-ana font-bold py-3 px-4 uppercase tracking-wider text-sm";
+                btn.innerText = "Rolleri Dagit ve Baslat";
+                btn.onclick = hostAssignRolesAndStart;
             }
         }
 
-        function hostStartsGame() {
+        function hostAssignRolesAndStart() {
+            let speakers = roomPlayers.filter(p => !p.isViewer);
+            let shuffledRoles = [...roller].sort(() => Math.random() - 0.5);
+            speakers.forEach((p, idx) => { p.role = shuffledRoles[idx]; });
+            roomPlayers.forEach(p => { if(p.isViewer) p.role = "viewer"; });
+
             broadcast({ type: 'START_GAME', players: roomPlayers });
+            myRole = roomPlayers.find(p => p.id === myId).role;
             startDebateMatch();
         }
 
         function handleRemoteStream(peerId, remoteStream) {
             const targetPlayer = roomPlayers.find(p => p.id === peerId);
-            if(targetPlayer) {
+            if(targetPlayer && targetPlayer.role && targetPlayer.role !== "viewer") {
                 const videoEl = document.getElementById(`video-${targetPlayer.role}`);
                 if(videoEl) {
                     videoEl.srcObject = remoteStream;
-                    // Kaliteli ve kopmayan ses akışı için tarayıcı oynatma tetikleyicisi
-                    videoEl.play().catch(e => console.log("Oynatma hatası:", e));
+                    videoEl.play().catch(e => console.log(e));
                 }
             }
         }
 
         function callAllPlayers() {
+            if(isViewer) return;
             roomPlayers.forEach(p => {
-                if(p.id !== myId) {
+                if(p.id !== myId && !p.isViewer) {
                     let call = myPeer.call(p.id, localStream);
                     call.on('stream', (remoteStream) => handleRemoteStream(p.id, remoteStream));
                 }
@@ -403,20 +476,22 @@
             showScreen('game-screen');
             document.getElementById('motion-text').innerText = selectedMotion;
             
-            if(localStream) document.getElementById(`video-${myRole}`).srcObject = localStream;
+            if(isViewer) {
+                document.getElementById('loopback-btn').classList.add('hidden');
+                document.getElementById('poi-btn').classList.add('hidden');
+            } else {
+                if(localStream) document.getElementById(`video-${myRole}`).srcObject = localStream;
+            }
+
             setTimeout(callAllPlayers, 1200);
 
-            if(myRole === "ha") {
+            if(myId === roomCode + "-HOST") {
                 document.getElementById('host-skip-btn').classList.remove('hidden');
             }
 
-            // Maç başında sesleri tamamen kapatmak yerine yazılımsal olarak kontrol etmek için ilk düzenleme
             muteAllVideoElementsExcept(""); 
             document.getElementById('game-status').innerText = "HAZIRLIK SURESI";
-
-            runTimer(8 * 60, () => {
-                executeNextStepLogic();
-            });
+            runTimer(8 * 60, false, () => { executeNextStepLogic(); });
         }
 
         function userFinishedSpeech() {
@@ -425,19 +500,21 @@
         }
 
         function hostRequestSkip() {
-            if(myRole !== "ha") return;
+            if(myId !== roomCode + "-HOST") return;
             if(inBreakPeriod) {
                 inBreakPeriod = false;
                 broadcast({ type: 'FORCE_NEXT_SPEAKER' });
                 startNextSpeaker();
             } else {
+                if(poiActive) finishPoiPeriod();
                 broadcast({ type: 'NEXT_STEP' });
                 handleTransitionPhase();
             }
         }
 
         function executeNextStepLogic() {
-            if (myRole === "ha") {
+            if(poiActive) return;
+            if (myId === roomCode + "-HOST") {
                 if(inBreakPeriod) {
                     inBreakPeriod = false;
                     broadcast({ type: 'FORCE_NEXT_SPEAKER' });
@@ -446,15 +523,15 @@
                     broadcast({ type: 'NEXT_STEP' });
                     handleTransitionPhase();
                 }
-            } else {
-                broadcast({ type: 'REQUEST_NEXT_STEP' });
-            }
+            } else { broadcast({ type: 'REQUEST_NEXT_STEP' }); }
         }
 
         function handleTransitionPhase() {
             clearInterval(window.debateInterval);
             document.getElementById('end-speech-btn').classList.add('hidden');
-            muteAllVideoElementsExcept(""); // Aralarda herkesin sesini yazılımsal kıs
+            document.getElementById('poi-btn').disabled = true;
+            document.getElementById('poi-btn').className = "flex-1 border-2 border-gray-400 text-gray-400 font-bold py-2 text-xs uppercase tracking-wide cursor-not-allowed";
+            muteAllVideoElementsExcept(""); 
 
             roller.forEach(r => {
                 const vbox = document.getElementById(`vbox-${r}`);
@@ -465,14 +542,14 @@
             if(currentSpeakerIndex < 3) {
                 inBreakPeriod = true;
                 document.getElementById('game-status').innerText = "1 DAKIKA ARA VERILDI";
-                document.getElementById('system-prompt').innerText = "Konusma bitti. Diger konusmaci hazirligi icin 1 dakikalık ara suresi basladi.";
+                document.getElementById('system-prompt').innerText = "Konusma bitti. Diger konusmaci hazirligi icin 1 dakikalik ara suresi basladi.";
                 
-                runTimer(60, () => {
+                runTimer(60, false, () => {
                     inBreakPeriod = false;
                     startNextSpeaker();
                 });
             } else {
-                if(myRole === "ha") broadcast({ type: 'GO_RATING' });
+                if(myId === roomCode + "-HOST") broadcast({ type: 'GO_RATING' });
                 goToRatingScreen();
             }
         }
@@ -481,7 +558,7 @@
             clearInterval(window.debateInterval);
             currentSpeakerIndex++;
             if(currentSpeakerIndex >= 4) {
-                if(myRole === "ha") broadcast({ type: 'GO_RATING' });
+                if(myId === roomCode + "-HOST") broadcast({ type: 'GO_RATING' });
                 return goToRatingScreen();
             }
 
@@ -494,37 +571,29 @@
             });
             document.getElementById(`vbox-${activeRole}`).classList.add('active-speaker');
 
-            // Ses kanalını hardware düzeyinde aç/kapat yapmak yerine sadece o anki konuşmacının sesini dinle
             muteAllVideoElementsExcept(activeRole);
 
             if(myRole === activeRole) {
                 document.getElementById('end-speech-btn').classList.remove('hidden');
                 document.getElementById('system-prompt').innerText = "SIRA SIZDE! Mikrofonunuz acildi, konusmanizi yapin.";
             } else {
-                document.getElementById('system-prompt').innerText = `Konusma sirasi ${rolIsimleri[activeRole]} tarafinda. Sesi dinliyorsunuz.`;
+                document.getElementById('system-prompt').innerText = `Konusma sirasi ${rolIsimleri[activeRole]} tarafindan takip ediliyor.`;
             }
 
-            runTimer(450, () => {
-                executeNextStepLogic();
-            });
+            runTimer(450, true, () => { executeNextStepLogic(); });
         }
 
-        // Kopmaları önleyen ana yazılımsal ses yönetim fonksiyonu
         function muteAllVideoElementsExcept(activeRole) {
             roller.forEach(r => {
                 const videoEl = document.getElementById(`video-${r}`);
                 if (videoEl) {
-                    if (r === myRole) {
-                        videoEl.muted = true; // Kendi sesini hoparlörden duyup yankı yapmasın diye
-                    } else {
-                        // Eğer aktif konuşmacı ise sesini aç, değilse sesini kıs (Kanalı kapatma ki bağlantı kopmasın)
-                        videoEl.muted = (r !== activeRole);
-                    }
+                    if (r === myRole) { videoEl.muted = !loopbackActive; } 
+                    else { videoEl.muted = (r !== activeRole); }
                 }
             });
         }
 
-        function runTimer(seconds, callback) {
+        function runTimer(seconds, isSpeechTimer, callback) {
             let timer = seconds;
             const timerEl = document.getElementById('game-timer');
             
@@ -534,6 +603,19 @@
                 let secs = timer % 60;
                 timerEl.innerText = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
 
+                if(isSpeechTimer && !isViewer) {
+                    let activeRole = roller[currentSpeakerIndex];
+                    if(timer < 390 && timer > 60 && myRole !== activeRole && myRole !== "viewer") {
+                        document.getElementById('poi-btn').disabled = false;
+                        document.getElementById('poi-btn').className = "flex-1 border-2 border-black bg-yellow-600 text-white font-bold py-2 text-xs uppercase tracking-wide cursor-pointer";
+                    } else {
+                        document.getElementById('poi-btn').disabled = true;
+                        document.getElementById('poi-btn').className = "flex-1 border-2 border-gray-400 text-gray-400 font-bold py-2 text-xs uppercase tracking-wide cursor-not-allowed";
+                    }
+                }
+
+                savedMainTimerSeconds = timer;
+
                 if (--timer < 0) {
                     clearInterval(window.debateInterval);
                     callback();
@@ -541,13 +623,128 @@
             }, 1000);
         }
 
+        function requestPoi() {
+            if(myRole === "viewer") return;
+            if(myId === roomCode + "-HOST") handlePoiRequest(myId);
+            else broadcast({ type: 'SIGNAL_POI_REQUEST' });
+        }
+
+        function handlePoiRequest(requesterId) {
+            if(poiActive) return;
+            poiRequesterId = requesterId;
+            let activeSpeaker = roomPlayers.find(p => p.role === roller[currentSpeakerIndex]);
+            
+            roomPlayers.forEach(p => {
+                let isSpeaker = (p.id === activeSpeaker.id);
+                let msg = isSpeaker ? "Soru Talebi Geldi!" : "Bir Katilimci Soru Istiyor";
+                if(p.id === roomCode + "-HOST") showPoiPanelClient(msg, isSpeaker);
+                else {
+                    let ref = hostConnectionReferences.find(c => c.peer === p.id);
+                    if(ref) ref.send({ type: 'BROADCAST_POI_SHOW_PANEL', msg: msg, isSpeaker: isSpeaker });
+                }
+            });
+        }
+
+        function showPoiPanelClient(msg, isSpeaker) {
+            document.getElementById('poi-panel').classList.remove('hidden');
+            document.getElementById('poi-msg').innerText = msg;
+            if(isSpeaker) document.getElementById('poi-actions').classList.remove('hidden');
+            else document.getElementById('poi-actions').classList.add('hidden');
+        }
+
+        function respondToPoi(accepted) {
+            if(myId === roomCode + "-HOST") handlePoiResponse(accepted);
+            else broadcast({ type: 'SIGNAL_POI_RESPONSE', accepted: accepted });
+        }
+
+        function handlePoiResponse(accepted) {
+            broadcast({ type: 'BROADCAST_POI_HIDE_PANEL' });
+            document.getElementById('poi-panel').classList.add('hidden');
+
+            if(accepted) {
+                poiActive = true;
+                clearInterval(window.debateInterval);
+                let targetPlayer = roomPlayers.find(p => p.id === poiRequesterId);
+                let activeSpeakerRole = targetPlayer ? targetPlayer.role : "";
+
+                broadcast({ type: 'BROADCAST_POI_START_SPEECH', activeSpeakerRole: activeSpeakerRole });
+                startPoiTimerClient(activeSpeakerRole);
+            } else { poiRequesterId = null; }
+        }
+
+        function startPoiTimerClient(requesterRole) {
+            document.getElementById('game-status').innerText = "SORU ALINDI (15 SN)";
+            
+            roller.forEach(r => {
+                const videoEl = document.getElementById(`video-${r}`);
+                if (videoEl && r !== myRole) { videoEl.muted = (r !== requesterRole); }
+            });
+
+            let poiTimer = 15;
+            const timerEl = document.getElementById('game-timer');
+            timerEl.innerText = "00:15";
+
+            let currentSpeakerRole = roller[currentSpeakerIndex];
+            if(myRole === currentSpeakerRole) {
+                document.getElementById('end-speech-btn').innerText = "SORUYU BITIR VE DEVAM ET";
+                document.getElementById('end-speech-btn').classList.remove('hidden');
+                document.getElementById('end-speech-btn').onclick = userCutPoiShort;
+            }
+
+            window.poiCountdownInterval = setInterval(() => {
+                poiTimer--;
+                timerEl.innerText = `00:${poiTimer.toString().padStart(2, '0')}`;
+                if(poiTimer <= 0) {
+                    if(myId === roomCode + "-HOST") finishPoiPeriod();
+                    else broadcast({ type: 'SIGNAL_POI_FINISHED' });
+                }
+            }, 1000);
+        }
+
+        function userCutPoiShort() {
+            if(myId === roomCode + "-HOST") finishPoiPeriod();
+            else broadcast({ type: 'SIGNAL_POI_FINISHED' });
+        }
+
+        function finishPoiPeriod() {
+            clearInterval(window.poiCountdownInterval);
+            poiActive = false;
+            poiRequesterId = null;
+            broadcast({ type: 'BROADCAST_POI_END' });
+            endPoiTimerClient();
+        }
+
+        function endPoiTimerClient() {
+            clearInterval(window.poiCountdownInterval);
+            poiActive = false;
+
+            let activeRole = roller[currentSpeakerIndex];
+            document.getElementById('game-status').innerText = `SIRA: ${rolIsimleri[activeRole].toUpperCase()}`;
+            
+            if(myRole === activeRole) {
+                document.getElementById('end-speech-btn').innerText = "KONUSMAMI BITIR";
+                document.getElementById('end-speech-btn').onclick = userFinishedSpeech;
+            }
+
+            muteAllVideoElementsExcept(activeRole);
+            runTimer(savedMainTimerSeconds, true, () => { executeNextStepLogic(); });
+        }
+
+        /* --- PUANLAMA VE SIRALI PODYUM --- */
         function goToRatingScreen() {
             clearInterval(window.debateInterval);
+            if(isViewer) {
+                showScreen('rating-screen');
+                document.getElementById('rating-inputs').innerHTML = `<p class="text-center font-bold italic">Izleyiciler puan veremez. Sonuclar bekleniyor...</p>`;
+                document.getElementById('submit-ratings-btn').classList.add('hidden');
+                return;
+            }
+
             showScreen('rating-screen');
             const targetDiv = document.getElementById('rating-inputs');
             targetDiv.innerHTML = "";
 
-            roomPlayers.forEach(p => {
+            roomPlayers.filter(p => !p.isViewer).forEach(p => {
                 if(p.id !== myId) {
                     targetDiv.innerHTML += `
                         <div class="flex flex-col gap-2 border-b border-black/20 pb-4">
@@ -570,15 +767,9 @@
             document.getElementById(`rate-${role}`).value = ratingValue;
             const container = document.getElementById(`star-container-${role}`);
             const stars = container.getElementsByClassName('star');
-            
             for (let i = 0; i < stars.length; i++) {
-                if (i < ratingValue) {
-                    stars[i].innerHTML = '&#9733;';
-                    stars[i].classList.add('selected');
-                } else {
-                    stars[i].innerHTML = '&#9734;';
-                    stars[i].classList.remove('selected');
-                }
+                if (i < ratingValue) { stars[i].innerHTML = '&#9733;'; stars[i].classList.add('selected'); }
+                else { stars[i].innerHTML = '&#9734;'; stars[i].classList.remove('selected'); }
             }
         }
 
@@ -586,55 +777,40 @@
             let currentScores = {};
             let allRated = true;
 
-            roomPlayers.forEach(p => {
+            roomPlayers.filter(p => !p.isViewer).forEach(p => {
                 if(p.id !== myId) {
                     let val = parseInt(document.getElementById(`rate-${p.role}`).value);
-                    if(val === 0) {
-                        allRated = false;
-                    }
+                    if(val === 0) allRated = false;
                     currentScores[p.role] = val;
-                } else {
-                    currentScores[p.role] = 0;
-                }
+                } else { currentScores[p.role] = 0; }
             });
 
-            if(!allRated) {
-                alert("Lutfen tum konusmacilara yildiz secerek puan verin.");
-                return;
-            }
+            if(!allRated) return alert("Tum konusmacilara yildiz secerek puan verin.");
 
             document.getElementById('submit-ratings-btn').classList.add('hidden');
             document.getElementById('waiting-status').classList.remove('hidden');
 
-            if(myRole === 'ha') {
-                handleIncomingScores(currentScores);
-            } else {
-                broadcast({
-                    type: 'SUBMIT_SCORES',
-                    scores: currentScores
-                });
-            }
+            if(myId === roomCode + "-HOST") handleIncomingScores(currentScores);
+            else broadcast({ type: 'SUBMIT_SCORES', scores: currentScores });
         }
 
         function handleIncomingScores(scoresObj) {
             submittedRatingsCount++;
-            
             roller.forEach(r => {
                 if(!finalScores[r]) finalScores[r] = 0;
                 finalScores[r] += (scoresObj[r] || 0);
             });
 
             if(submittedRatingsCount === 4) {
-                broadcast({
-                    type: 'FINAL_RESULTS',
-                    scores: finalScores
-                });
+                broadcast({ type: 'FINAL_RESULTS', scores: finalScores });
                 renderPodium(finalScores);
             }
         }
 
         function renderPodium(scores) {
             showScreen('result-screen');
+            document.getElementById('podium-motion-sub').innerText = selectedMotion;
+            
             const container = document.getElementById('podium-container');
             container.innerHTML = "";
 
@@ -642,30 +818,90 @@
                 return { role: key, score: scores[key] };
             }).sort((a, b) => b.score - a.score);
 
-            sortedRoles.forEach((item, index) => {
-                let dereceMetni = (index + 1) + ". LUK DERECESI";
+            let animationOrder = [...sortedRoles].reverse();
+
+            animationOrder.forEach((item, index) => {
+                let realRank = 4 - index; 
+                let dereceMetni = realRank + ". LUK DERECESI";
                 let arkaPlan = "bg-[#fdfaf2]";
                 let yaziRengi = "text-[#2c2c2c]";
 
-                if(index === 0) {
+                if(realRank === 1) {
                     dereceMetni = "BIRINCI - SAMPIYON";
                     arkaPlan = "bg-[#4a3728]";
-                    yaziRengi = "text-white";
+                    yaziRengi = "text-white animate-bounce";
                 }
 
                 container.innerHTML += `
-                    <div class="gazete-kutu p-4 ${arkaPlan} ${yaziRengi} flex justify-between items-center">
+                    <div id="podium-card-${realRank}" class="podium-card gazete-kutu p-4 ${arkaPlan} ${yaziRengi} flex justify-between items-center">
                         <div>
-                            <p class="text-xs uppercase font-bold tracking-widest opacity-80">${dereceMetni}</p>
-                            <h3 class="text-2xl font-black italic mt-1 uppercase">${rolIsimleri[item.role]}</h3>
+                            <p class="text-[10px] uppercase font-bold tracking-widest opacity-80">${dereceMetni}</p>
+                            <h3 class="text-xl font-black italic mt-1 uppercase">${rolIsimleri[item.role]}</h3>
                         </div>
                         <div class="text-right">
-                            <p class="text-xs uppercase font-bold opacity-70">Toplam Puan</p>
-                            <span class="text-3xl font-black">${item.score}</span>
+                            <p class="text-[10px] uppercase font-bold opacity-70">Toplam Skor</p>
+                            <span class="text-2xl font-black">${item.score}</span>
                         </div>
                     </div>
                 `;
             });
+
+            setTimeout(() => { document.getElementById('podium-card-4').classList.add('reveal'); }, 500);
+            setTimeout(() => { document.getElementById('podium-card-3').classList.add('reveal'); }, 1500);
+            setTimeout(() => { document.getElementById('podium-card-2').classList.add('reveal'); }, 2500);
+            setTimeout(() => { document.getElementById('podium-card-1').classList.add('reveal'); }, 4000);
+        }
+
+        function sharePodiumImage() {
+            const area = document.getElementById('share-capture-area');
+            const btn = document.getElementById('share-podium-btn');
+            btn.innerText = "Fotograf Hazirlaniyor...";
+            btn.disabled = true;
+
+            html2canvas(area, {
+                useCORS: true,
+                allowTaint: true,
+                backgroundColor: "#e3dccb"
+            }).then(canvas => {
+                const imageBase64 = canvas.toDataURL("image/png");
+                
+                if (navigator.canShare && navigator.share) {
+                    fetch(imageBase64)
+                        .then(res => res.blob())
+                        .then(blob => {
+                            const file = new File([blob], "munazara-podyum.png", { type: "image/png" });
+                            navigator.share({
+                                files: [file],
+                                title: 'Munazara Podyum Sonuclari',
+                                text: 'Munazara tamamlandi! Iste podyum siralamasi:'
+                            }).then(() => {
+                                btn.innerText = "Podyumu Fotograf Olarak Paylas Veya Kaydet";
+                                btn.disabled = false;
+                            }).catch(err => {
+                                console.log(err);
+                                downloadFallback(imageBase64);
+                            });
+                        });
+                } else { downloadFallback(imageBase64); }
+            }).catch(err => {
+                console.error(err);
+                alert("Fotograf uretilirken bir sorun olustu.");
+                btn.innerText = "Podyumu Fotograf Olarak Paylas Veya Kaydet";
+                btn.disabled = false;
+            });
+
+            function downloadFallback(url) {
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `munazara-podyum-${roomCode}.png`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                alert("Fotograf cihaziniza indirildi!");
+                btn.innerText = "Podyumu Fotograf Olarak Paylas Veya Kaydet";
+                btn.disabled = false;
+            }
         }
     </script>
 </body>
