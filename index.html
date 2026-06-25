@@ -3,10 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Munazara Cepte - Klasik Retro Baski</title>
-    <!-- Tailwind CSS Kararli Surum CDN -->
+    <title>Münazara</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    <!-- PeerJS CDN -->
     <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
     <style>
         html, body {
@@ -63,7 +61,6 @@
             border: 4px solid #555555 !important; 
         }
 
-        /* Yildiz puanlama stilleri */
         .star {
             cursor: pointer;
             font-size: 2.5rem;
@@ -77,7 +74,6 @@
 </head>
 <body class="p-4 max-w-md mx-auto flex flex-col justify-between">
 
-    <!-- MENU EKRANI -->
     <div id="menu-screen" class="flex-1 flex flex-col justify-center gap-6">
         <div class="text-center">
             <h1 class="text-4xl font-black italic tracking-tight border-b-4 border-black pb-2 uppercase text-[#2c2c2c]">MUNAZARA CEPTE</h1>
@@ -104,7 +100,6 @@
         </div>
     </div>
 
-    <!-- ODA BEKLEME EKRANI -->
     <div id="room-screen" class="hidden flex-1 flex flex-col justify-between">
         <div class="gazete-kutu p-4 text-center">
             <p class="text-xs uppercase tracking-wider font-bold">Oda Kodu</p>
@@ -124,7 +119,6 @@
         </button>
     </div>
 
-    <!-- OYUN ARENASI -->
     <div id="game-screen" class="hidden flex-1 flex flex-col justify-between gap-2">
         <div class="gazete-kutu p-3 text-center">
             <div id="game-status" class="text-base font-bold uppercase tracking-widest mb-1">Dusunme Suresi</div>
@@ -155,7 +149,7 @@
 
         <div class="flex flex-col gap-2">
             <div id="system-prompt" class="border-2 border-black bg-[#fdfaf2] p-3 text-center text-xs font-bold uppercase tracking-wide">
-                Kameralar acik, mikrofonlar hazirlik icin sessize alindi.
+                Kameralar acik, mikrofonlar hazirlik icin hazırlandı.
             </div>
             <button id="end-speech-btn" onclick="userFinishedSpeech()" class="hidden w-full bg-[#8b0000] text-white font-bold py-4 uppercase tracking-wider shadow-md">
                 KONUSMAMI BITIR
@@ -166,7 +160,6 @@
         </div>
     </div>
 
-    <!-- PUANLAMA SEKMESI -->
     <div id="rating-screen" class="hidden flex-1 flex flex-col justify-center gap-4">
         <div class="text-center">
             <h2 class="text-3xl font-bold uppercase italic border-b-2 border-black pb-1">Munazara Tamamlandi</h2>
@@ -184,7 +177,6 @@
         </button>
     </div>
 
-    <!-- SONUC / PODIUM EKRANI -->
     <div id="result-screen" class="hidden flex-1 flex flex-col justify-center gap-6">
         <div class="text-center border-b-4 border-black pb-2">
             <h1 class="text-4xl font-black italic uppercase">MUNAZARA SONUCLARI</h1>
@@ -192,15 +184,13 @@
         </div>
 
         <div id="podium-container" class="flex flex-col gap-4 my-4">
-            <!-- Dinamik podyum sonuclari buraya basılacak -->
-        </div>
+            </div>
 
         <button onclick="location.reload()" class="w-full gazete-buton-ana font-bold py-3 uppercase tracking-wider text-sm">
             Yeni Mac Baslat
         </button>
     </div>
 
-    <!-- PROGRAM SCRIPT KODLARI -->
     <script>
         const neseHavuzu = ["yapay zeka sistemleri", "basılı kitaplar", "sosyal medya platformları", "nükleer enerji santralleri", "kripto para birimleri", "uzay araştırmaları yatırımları", "özel okullar", "zorunlu din dersleri", "genetik mühendisliği çalışmaları", "akıllı telefon kullanımı", "büyükşehir göçleri", "alternatif tıp yöntemleri", "hayvanat bahçeleri", "profesyonel spor kontratları", "ödev sistemi", "kamu kameraları", "otonom araçlar", "yapay et üretimi", "e-spor turnuvaları", "estetik cerrahi müdahlenin", "çevrim içi eğitimler", "uluslararası askeri ittifaklar", "büyük teknoloji şirketleri", "fosil yakıt kullanımı", "sanat eserlerinde sansür", "metaverse mülkleri", "haftalık çalışma saatleri", "plastik poşet ve ambalajlar", "şehir içi araç girişleri", "yapay zeka sanatçıları", "gençlik festivalleri", "uluslararası ticaret anlaşmaları", "üniversite harçları", "reklam algoritmaları", "bireysel silahlanma", "genetiği değiştirilmiş gıdalar", "uzaktan çalışma modelleri", "tarihi eserlerin iadesi", "uzay turizmi faaliyetleri", "dijital oyun süreleri"];
         const fiilHavuzu = ["yasaklanmalıdır", "sınırlandırılmalıdır", "teşvik edilmelidir", "kamulaştırılmalıdır", "vergilendirilmelidir", "ücretsiz hale getirilmelidir", "zorunlu kılınmalıdır", "kademeli olarak kaldırılmalıdır", "uluslararası denetime tabi tutulmalıdır", "desteklenmelidir", "suç kapsamına alınmalıdır", "özelleştirilmelidir", "yasal güvence altına alınmalıdır", "şeffaflaştırılmalıdır", "yerelleştirilmelidir", "ödüllendirilmelidir", "engellenmelidir", "bölgesel olarak askıya alınmalıdır", "müfredattan çıkarılmalıdır", "fonlanmalıdır"];
@@ -221,10 +211,8 @@
         let clientToHostConn = null;
         let inBreakPeriod = false;
 
-        // Puanlama icin hafıza matrisleri
-        let playerRatings = {}; 
-        let submittedRatingsCount = 0;
         let finalScores = {}; 
+        let submittedRatingsCount = 0;
 
         const roller = ["ha", "ma", "hk", "mk"];
         const rolIsimleri = { "ha": "Hukumet Acilis", "ma": "Muhalefet Acilis", "hk": "Hukumet Kapanis", "mk": "Muhalefet Kapanis" };
@@ -239,13 +227,22 @@
         async function getMedia() {
             if (localStream) return;
             try {
+                // SES KALITESINI ARTIRAN VE KILITLENMEYI ONLEYEN FILTRELER: Echo cancellation ve noise suppression aktif
                 localStream = await navigator.mediaDevices.getUserMedia({ 
                     video: { width: { ideal: 300 }, height: { ideal: 300 }, facingMode: "user" }, 
-                    audio: true 
+                    audio: {
+                        echoCancellation: true,
+                        noiseSuppression: true,
+                        autoGainControl: true
+                    }
                 });
+                
+                // Ağ kopmalarını önlemek için tarayıcının ses track'lerini kapatmıyoruz. 
+                // Donanımsal akışı sürekli canlı tutuyoruz.
+                localStream.getAudioTracks().forEach(track => { track.enabled = true; });
             } catch (err) {
-                console.error("Medya hatasi:", err);
-                alert("Kamera veya mikrofon izni verilmedi. Luyen tarayici ayarlarindan izin verin.");
+                console.error("Medya hatası:", err);
+                alert("Kamera veya mikrofon izni verilmedi. Lütfen tarayıcı ayarlarından izin verin.");
             }
         }
 
@@ -335,6 +332,9 @@
                     startDebateMatch();
                 } else if (data.type === 'NEXT_STEP') {
                     handleTransitionPhase();
+                } else if (data.type === 'FORCE_NEXT_SPEAKER') {
+                    inBreakPeriod = false;
+                    startNextSpeaker();
                 } else if (data.type === 'GO_RATING') {
                     clearInterval(window.debateInterval);
                     goToRatingScreen();
@@ -384,7 +384,8 @@
                 const videoEl = document.getElementById(`video-${targetPlayer.role}`);
                 if(videoEl) {
                     videoEl.srcObject = remoteStream;
-                    videoEl.play().catch(e => console.log("Oynatma hatasi:", e));
+                    // Kaliteli ve kopmayan ses akışı için tarayıcı oynatma tetikleyicisi
+                    videoEl.play().catch(e => console.log("Oynatma hatası:", e));
                 }
             }
         }
@@ -409,6 +410,8 @@
                 document.getElementById('host-skip-btn').classList.remove('hidden');
             }
 
+            // Maç başında sesleri tamamen kapatmak yerine yazılımsal olarak kontrol etmek için ilk düzenleme
+            muteAllVideoElementsExcept(""); 
             document.getElementById('game-status').innerText = "HAZIRLIK SURESI";
 
             runTimer(8 * 60, () => {
@@ -423,14 +426,21 @@
 
         function hostRequestSkip() {
             if(myRole !== "ha") return;
-            executeNextStepLogic();
+            if(inBreakPeriod) {
+                inBreakPeriod = false;
+                broadcast({ type: 'FORCE_NEXT_SPEAKER' });
+                startNextSpeaker();
+            } else {
+                broadcast({ type: 'NEXT_STEP' });
+                handleTransitionPhase();
+            }
         }
 
         function executeNextStepLogic() {
             if (myRole === "ha") {
-                // Eger 1 dakikalik ara suresi icindeysek ve host atla derse, arayi tamamen iptal et ve konusmaciyi baslat
                 if(inBreakPeriod) {
                     inBreakPeriod = false;
+                    broadcast({ type: 'FORCE_NEXT_SPEAKER' });
                     startNextSpeaker();
                 } else {
                     broadcast({ type: 'NEXT_STEP' });
@@ -444,6 +454,7 @@
         function handleTransitionPhase() {
             clearInterval(window.debateInterval);
             document.getElementById('end-speech-btn').classList.add('hidden');
+            muteAllVideoElementsExcept(""); // Aralarda herkesin sesini yazılımsal kıs
 
             roller.forEach(r => {
                 const vbox = document.getElementById(`vbox-${r}`);
@@ -454,7 +465,7 @@
             if(currentSpeakerIndex < 3) {
                 inBreakPeriod = true;
                 document.getElementById('game-status').innerText = "1 DAKIKA ARA VERILDI";
-                document.getElementById('system-prompt').innerText = "Konusma bitti. Diger konusmaci hazirligi icin 1 dakikalik ara suresi basladi.";
+                document.getElementById('system-prompt').innerText = "Konusma bitti. Diger konusmaci hazirligi icin 1 dakikalık ara suresi basladi.";
                 
                 runTimer(60, () => {
                     inBreakPeriod = false;
@@ -483,21 +494,33 @@
             });
             document.getElementById(`vbox-${activeRole}`).classList.add('active-speaker');
 
-            if(localStream) {
-                localStream.getAudioTracks().forEach(track => {
-                    track.enabled = (myRole === activeRole);
-                });
-            }
+            // Ses kanalını hardware düzeyinde aç/kapat yapmak yerine sadece o anki konuşmacının sesini dinle
+            muteAllVideoElementsExcept(activeRole);
 
             if(myRole === activeRole) {
                 document.getElementById('end-speech-btn').classList.remove('hidden');
                 document.getElementById('system-prompt').innerText = "SIRA SIZDE! Mikrofonunuz acildi, konusmanizi yapin.";
             } else {
-                document.getElementById('system-prompt').innerText = `Konusma sirasi ${rolIsimleri[activeRole]} tarafinda. Sesleri dinleyin.`;
+                document.getElementById('system-prompt').innerText = `Konusma sirasi ${rolIsimleri[activeRole]} tarafinda. Sesi dinliyorsunuz.`;
             }
 
             runTimer(450, () => {
                 executeNextStepLogic();
+            });
+        }
+
+        // Kopmaları önleyen ana yazılımsal ses yönetim fonksiyonu
+        function muteAllVideoElementsExcept(activeRole) {
+            roller.forEach(r => {
+                const videoEl = document.getElementById(`video-${r}`);
+                if (videoEl) {
+                    if (r === myRole) {
+                        videoEl.muted = true; // Kendi sesini hoparlörden duyup yankı yapmasın diye
+                    } else {
+                        // Eğer aktif konuşmacı ise sesini aç, değilse sesini kıs (Kanalı kapatma ki bağlantı kopmasın)
+                        videoEl.muted = (r !== activeRole);
+                    }
+                }
             });
         }
 
@@ -550,10 +573,10 @@
             
             for (let i = 0; i < stars.length; i++) {
                 if (i < ratingValue) {
-                    stars[i].innerHTML = '&#9733;'; // Icy dolu yildiz
+                    stars[i].innerHTML = '&#9733;';
                     stars[i].classList.add('selected');
                 } else {
-                    stars[i].innerHTML = '&#9734;'; // Icy bos yildiz
+                    stars[i].innerHTML = '&#9734;';
                     stars[i].classList.remove('selected');
                 }
             }
@@ -571,7 +594,7 @@
                     }
                     currentScores[p.role] = val;
                 } else {
-                    currentScores[p.role] = 0; // Kendine puan veremez
+                    currentScores[p.role] = 0;
                 }
             });
 
@@ -596,14 +619,12 @@
         function handleIncomingScores(scoresObj) {
             submittedRatingsCount++;
             
-            // Puanlari genel hafizada birlestir
             roller.forEach(r => {
                 if(!finalScores[r]) finalScores[r] = 0;
                 finalScores[r] += (scoresObj[r] || 0);
             });
 
             if(submittedRatingsCount === 4) {
-                // Herkes puanlamayi bitirdi, sonuclari ilan et
                 broadcast({
                     type: 'FINAL_RESULTS',
                     scores: finalScores
@@ -617,12 +638,10 @@
             const container = document.getElementById('podium-container');
             container.innerHTML = "";
 
-            // Rolleri alinan puanlara gore sirala
             let sortedRoles = Object.keys(scores).map(key => {
                 return { role: key, score: scores[key] };
             }).sort((a, b) => b.score - a.score);
 
-            // Kahoot tarzi sirali liste gorunumu olusturma
             sortedRoles.forEach((item, index) => {
                 let dereceMetni = (index + 1) + ". LUK DERECESI";
                 let arkaPlan = "bg-[#fdfaf2]";
@@ -635,7 +654,7 @@
                 }
 
                 container.innerHTML += `
-                    <div class="gazete-kutu p-4 ${arkaPlan} ${yaziRengi} flex justify-between items-center transition-all duration-500 transform translate-y-0">
+                    <div class="gazete-kutu p-4 ${arkaPlan} ${yaziRengi} flex justify-between items-center">
                         <div>
                             <p class="text-xs uppercase font-bold tracking-widest opacity-80">${dereceMetni}</p>
                             <h3 class="text-2xl font-black italic mt-1 uppercase">${rolIsimleri[item.role]}</h3>
