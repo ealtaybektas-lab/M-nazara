@@ -6,12 +6,13 @@
     <title>Münazara</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
-    <!-- Ekran görüntüsü alma kütüphanesi -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         html, body {
             background-color: #e3dccb !important;
-            background-image: url('https://www.transparenttextures.com/patterns/old-map.png') !important;
+            /* CORS hatasını engellemek için dış görsel yerine saf CSS gren efekti kullanıldı */
+            background-image: radial-gradient(rgba(0,0,0,0.05) 1px, transparent 0) !important;
+            background-size: 4px 4px !important;
             color: #2c2c2c !important;
             font-family: 'Times New Roman', Times, serif !important;
             margin: 0;
@@ -65,7 +66,6 @@
 </head>
 <body class="p-4 max-w-md mx-auto flex flex-col justify-between">
 
-    <!-- MENÜ EKRANI -->
     <div id="menu-screen" class="flex-1 flex flex-col justify-center gap-4">
         <div class="text-center">
             <h1 class="text-4xl font-black italic tracking-tight border-b-4 border-black pb-2 uppercase text-[#2c2c2c]">MUNAZARA CEPTE</h1>
@@ -95,7 +95,6 @@
         </div>
     </div>
 
-    <!-- ODA BEKLEME EKRANI -->
     <div id="room-screen" class="hidden flex-1 flex flex-col justify-between">
         <div class="gazete-kutu p-4 text-center">
             <p class="text-xs uppercase tracking-wider font-bold">Oda Kodu</p>
@@ -116,7 +115,6 @@
         </button>
     </div>
 
-    <!-- OYUN ARENASI -->
     <div id="game-screen" class="hidden flex-1 flex flex-col justify-between gap-2">
         <div class="gazete-kutu p-3 text-center relative">
             <div id="game-status" class="text-base font-bold uppercase tracking-widest mb-1">Dusunme Suresi</div>
@@ -174,7 +172,6 @@
         </div>
     </div>
 
-    <!-- PUANLAMA SEKMESI -->
     <div id="rating-screen" class="hidden flex-1 flex flex-col justify-center gap-4">
         <div class="text-center"><h2 class="text-3xl font-bold uppercase italic border-b-2 border-black pb-1">Munazara Tamamlandi</h2></div>
         <div id="rating-inputs" class="gazete-kutu p-4 flex flex-col gap-4"></div>
@@ -182,7 +179,6 @@
         <button id="submit-ratings-btn" onclick="submitRatings()" class="w-full bg-black text-white font-bold py-3 uppercase tracking-wider">Puanlari Gonder</button>
     </div>
 
-    <!-- SONUC / PODIUM EKRANI -->
     <div id="result-screen" class="hidden flex-1 flex flex-col justify-between gap-4 overflow-y-auto">
         <div id="share-capture-area" class="p-3 bg-[#e3dccb] flex flex-col gap-3">
             <div class="text-center border-b-4 border-black pb-2">
@@ -829,7 +825,8 @@
                 if(realRank === 1) {
                     dereceMetni = "BIRINCI - SAMPIYON";
                     arkaPlan = "bg-[#4a3728]";
-                    yaziRengi = "text-white animate-bounce";
+                    /* Yazı rengi okunabilirlik için koyu kahve üstüne mat krem rengine çekildi */
+                    yaziRengi = "text-[#fdfaf2] animate-bounce";
                 }
 
                 container.innerHTML += `
@@ -858,9 +855,10 @@
             btn.innerText = "Fotograf Hazirlaniyor...";
             btn.disabled = true;
 
+            // Arka plan görseli CSS'e taşındığı için CORS ve Taint engelleri kalktı
             html2canvas(area, {
                 useCORS: true,
-                allowTaint: true,
+                allowTaint: false,
                 backgroundColor: "#e3dccb"
             }).then(canvas => {
                 const imageBase64 = canvas.toDataURL("image/png");
