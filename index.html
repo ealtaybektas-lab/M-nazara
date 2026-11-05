@@ -9,7 +9,7 @@
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
   <style>
     *{box-sizing:border-box}
-    html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#101010;color:#f5f0e6;font-family:Georgia,serif}
+    html,body{margin:0;width:100%;height:100%;overflow:hidden;background:transparent;color:#f5f0e6;font-family:Georgia,serif}
     #intro{position:fixed;inset:0;z-index:20;display:flex;align-items:center;justify-content:center;padding:22px;background:radial-gradient(ellipse at center,#34302a 0,#111 68%)}
     .panel{width:min(520px,100%);border:1px solid #8c7958;border-radius:18px;padding:28px 24px;text-align:center;background:rgba(10,10,10,.88);box-shadow:0 20px 80px #000}
     .crescent{font-size:40px;color:#c7b38e;line-height:1}
@@ -28,7 +28,10 @@
     #controls button{pointer-events:auto;min-width:145px}
     #shot{background:#171512;color:#f4ead7}
     #hint{position:fixed;z-index:11;left:12px;right:12px;bottom:92px;text-align:center;display:none;font:13px Arial,sans-serif;text-shadow:0 1px 5px #000}
-    a-scene{position:fixed;inset:0;width:100%;height:100%;z-index:1}
+    a-scene{position:fixed;inset:0;width:100%;height:100%;z-index:0}
+    /* MindAR kamera videosunu negatif z-index ile ekler; opak body arka planı videoyu gizler. */
+    body > video{position:fixed!important;inset:0!important;width:100%!important;height:100%!important;object-fit:cover!important;z-index:-2!important}
+    a-scene canvas{background:transparent!important}
     .hidden{display:none!important}
     @media (max-height:650px){.panel{padding:18px}.rule{margin:12px 0}p{font-size:14px}}
   </style>
@@ -86,6 +89,17 @@
     const hint = document.getElementById('hint');
     const controls = document.getElementById('controls');
     const target = document.getElementById('target');
+
+    sceneEl.addEventListener('arReady', () => {
+      console.log('MindAR hazır: kamera ve hedef takibi başlatıldı.');
+      statusEl.textContent = 'Kamera hazır. Duvar işaretini kameraya gösterin.';
+    });
+
+    sceneEl.addEventListener('arError', (event) => {
+      console.error('MindAR arError:', event);
+      statusEl.textContent = 'Kamera/AR başlatılamadı. Konsoldaki arError ayrıntısına bakın.';
+      startBtn.disabled = false;
+    });
 
     target.addEventListener('targetFound', () => {
       hint.textContent = 'Atatürk bulundu. Yanına geçip fotoğrafınızı çekebilirsiniz.';
