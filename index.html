@@ -98,14 +98,26 @@
       startBtn.disabled = true;
       statusEl.textContent = 'Kamera başlatılıyor…';
       try {
-        await sceneEl.components['mindar-image'].start();
+        // MindAR, A-Frame'de component üzerinden değil system üzerinden başlatılır.
+        if (!sceneEl.hasLoaded) {
+          await new Promise(resolve => {
+            sceneEl.addEventListener('loaded', resolve, { once: true });
+          });
+        }
+
+        const arSystem = sceneEl.systems['mindar-image-system'];
+        if (!arSystem || typeof arSystem.start !== 'function') {
+          throw new Error('MindAR sistemi bulunamadı. Sayfayı yenileyip tekrar deneyin.');
+        }
+
+        await arSystem.start();
         intro.classList.add('hidden');
         hud.style.display = 'block';
         hint.style.display = 'block';
         controls.style.display = 'flex';
       } catch (err) {
-        console.error(err);
-        statusEl.textContent = 'Kamera açılamadı. HTTPS bağlantısını ve kamera iznini kontrol edin; sonra tekrar deneyin.';
+        console.error('AR başlatma hatası:', err);
+        statusEl.textContent = 'AR başlatılamadı: ' + (err.message || 'Bilinmeyen hata');
         startBtn.disabled = false;
       }
     });
