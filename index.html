@@ -32,6 +32,39 @@
 <label for="newNumber">Fotoğraf numarası</label><input id="newNumber" inputmode="numeric" maxlength="20" placeholder="Örn. 325">
 <label for="file">Fotoğraf (en fazla 50 MB)</label><input id="file" type="file" accept="image/*">
 <button id="uploadBtn">Fotoğrafı yükle</button>
+<hr>
+<h3 style="font-family:Georgia,serif;font-weight:400;margin:0 0 8px">Gemini Atatürk Promptu</h3>
+<p class="lead">Fotoğrafı Gemini'ye gönderirken aşağıdaki komutu kullan.</p>
+<textarea id="geminiPrompt" readonly style="width:100%;min-height:260px;padding:13px;border:1px solid #66583f;border-radius:10px;background:#0e0e0e;color:#f5f0e6;font:14px/1.55 Arial,sans-serif;resize:vertical">Bu fotoğrafı gerçekçi bir fotoğraf düzenlemesiyle yeniden oluştur.
+
+Fotoğraftaki kişinin hemen yanına Mustafa Kemal Atatürk'ü ekle.
+
+ATATÜRK'ÜN GÖRÜNÜMÜ:
+- Gerçek Mustafa Kemal Atatürk'e yüz hatları bakımından güçlü şekilde benzesin.
+- Siyah klasik takım elbise, beyaz gömlek ve kravat giysin.
+- Boydan görünsün, ayakta ve doğal bir duruşta olsun.
+- Fotoğraftaki kişiyle aynı perspektifte ve gerçekçi ölçekte bulunsun.
+
+ÇOK ÖNEMLİ KURALLAR:
+- Orijinal fotoğraftaki kişinin yüzünü kesinlikle değiştirme.
+- Yüzünü, gözlerini, burnunu, ağzını, saçını ve ifadesini aynen koru.
+- Kişinin vücudunu, kıyafetlerini ve pozunu değiştirme.
+- Fotoğrafın arka planını ve mevcut ortamı koru.
+- Atatürk'ün ışıklandırması, gölgesi, perspektifi ve ayaklarının zemine teması gerçekçi olsun.
+- Yapay zekâ çizimi veya kolaj gibi görünmesin; gerçek bir fotoğraf karesi izlenimi versin.
+
+FİLİGRAN:
+- Fotoğrafın sağ alt köşesine "BULANCAK FEN LİSESİ" yazısını ekle.
+- Zarif, modern ve kurumsal bir tipografi kullan.
+- Yazı beyaz veya fotoğrafla uyumlu açık bir renkte olsun.
+- Hafif gölge veya ince yarı saydam koyu zemin kullanarak okunaklı olmasını sağla.
+- Küçük ama rahat okunabilir boyutta olsun.
+- Fotoğrafın önemli bölümlerini kapatmasın.
+- Yazıyı kesinlikle doğru yaz: BULANCAK FEN LİSESİ.
+
+Yalnızca Atatürk'ü ve filigranı ekle. Gereksiz değişiklik yapma. Mümkün olan en hızlı şekilde işlemi tamamla.</textarea>
+<button id="copyPromptBtn" class="secondary">Promptu kopyala</button>
+<div id="copyPromptMsg" class="msg" role="status"></div>
 <button id="logoutBtn" class="secondary">Çıkış yap</button>
 </div>
 <div id="adminMsg" class="msg" role="status"></div>
@@ -73,6 +106,14 @@ $("loginBtn").onclick=async()=>{
  if(!error) await refreshAuth();
 };
 $("logoutBtn").onclick=async()=>{await client.auth.signOut();say("adminMsg","Çıkış yapıldı.");await refreshAuth();};
+$("copyPromptBtn").onclick=async()=>{
+ const prompt=$("geminiPrompt").value;
+ try{
+  if(navigator.clipboard && window.isSecureContext){await navigator.clipboard.writeText(prompt);}
+  else{$("geminiPrompt").focus();$("geminiPrompt").select();if(!document.execCommand("copy"))throw new Error("copy");}
+  say("copyPromptMsg","Prompt kopyalandı. Gemini'ye yapıştırabilirsin.");
+ }catch(e){$("geminiPrompt").focus();$("geminiPrompt").select();say("copyPromptMsg","Metin seçildi. Kopyalamak için basılı tutup Kopyala'ya dokun.");}
+};
 $("uploadBtn").onclick=async()=>{
  const number=$("newNumber").value.trim(),file=$("file").files[0];
  if(!/^\d{1,20}$/.test(number)){say("adminMsg","Geçerli bir fotoğraf numarası gir.");return;}
